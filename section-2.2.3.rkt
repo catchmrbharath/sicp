@@ -155,3 +155,38 @@
                        (enumerate-interval 1 (- i 1))))
                 (enumerate-interval 1 n)))))
 
+(define (prime-sum-pairs n)
+  (map make-pair-sum
+       (filter prime-sum?
+               (flatmap
+                 (lambda (i)
+                   (map (lambda (j) (list i j))
+                        (enumerate-interval 1 (- i 1))))
+                 (enumerate-interval 1 n)))))
+
+;; Exercise 2.40
+
+(define (unique-pairs n)
+  (flatmap
+   (lambda (i)
+     (map (lambda (j) (list i j))
+          (enumerate-interval 1 (- i 1))))
+   (enumerate-interval 1 n))
+  )
+
+(define (prime-sum-pairs n)
+  (filter prime-sum?
+          (unique-pairs n)))
+
+;; Exercise 2.41
+
+(define (ordered-triplets n)
+  (flatmap
+    (lambda (i)
+      (flatmap
+        (lambda (j)
+          (map (lambda (k) (list k j i))
+               (enumerate-interval 1 (- j 1))))
+        (enumerate-interval 1 (- i 1))))
+    (enumerate-interval 1 n)))
+
