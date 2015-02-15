@@ -190,3 +190,53 @@
         (enumerate-interval 1 (- i 1))))
     (enumerate-interval 1 n)))
 
+(define (sum-list x)
+  (fold-left + 0 x))
+
+(define (sum-triplets s n)
+  (filter (lambda (x) (= (sum-list x) s))
+          (ordered-triplets n)))
+
+
+;;Exercise 2.42
+
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+      (list empty-board)
+      (filter
+        (lambda (positions) ( safe? k positions))
+        (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position new-row k rest-of-queens))
+                 (enumerate-interval 1 board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+(define empty-board nil)
+(define ( adjoin-position new-row k rest-of-queens)
+  (cons new-row rest-of-queens))
+
+(define (safe? k positions)
+  (define (present l)
+    (car l))
+  (define ( safe-iter left right queens)
+    (cond ((null? queens) #t)
+          ((or (= (car remain) present)
+                (= (car remain) left)
+                (= (car remain) right)))
+          (else (safe-iter (- left 1) (+ right 1) (cdr queens)))))
+  (safe-iter (- present 1) (+ present 1) (cdr positions)))
+
+
+(define (safe? k positions)
+  (let ((present (car positions)))
+  (define ( safe-iter left right queens)
+    
+    (cond ((null? queens) #t)
+          ((or (= (car queens) present)
+                (= (car queens) left)
+                (= (car queens) right)) #f)
+          (else (safe-iter (- left 1) (+ right 1) (cdr queens)))))
+  (safe-iter (- present 1) (+ present 1) (cdr positions))))
