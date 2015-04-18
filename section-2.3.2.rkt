@@ -21,6 +21,23 @@
         ((and (number? m1) (number? m2)) (* m1 m2))
         (else (list '* m1 m2))))
 
+;;Exercise 2.56
+(define (make-exponentiation base power)
+  (cond ((=number? power 0) 1)
+        ((=number? power 1) base)
+        ((=number? base 0) 0)
+        (else (list '** base power))))
+
+(define (exponentiation? exp)
+  (and (pair? exp) (eq? (car exp) '**)))
+
+(define (base expr)
+  (cadr expr))
+
+(define (exponent expr)
+  (caddr expr))
+
+
 (define (sum? x)
   (and (pair? x) (eq? (car x) '+)))
 
@@ -53,6 +70,9 @@
                    (make-product
                     (multiplicand exp)
                     (deriv (multiplier exp) var))))
+        ((exponentiation? exp)
+         (make-product (make-product
+                        (make-exponentiation (base exp)) (make-sum (exponent exp) '-1)) (exponent exp)))
         (else
          (error "unknown expression type" exp))))
 
