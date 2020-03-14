@@ -292,4 +292,150 @@ Tests
 #+RESULTS:
 : (A D A B B C A)
 
-** Representation of complex numbers
+* Modularity Object and State
+** Assignment and Local state
+#+NAME: account_example
+#+begin_src racket :results none
+(define (make-account balance)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance
+                     (- balance amount))
+               balance)
+        (error "Not sufficient funds: " balance)))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (define (dispatch m)
+    (cond ((eq? m 'withdraw) withdraw)
+          ((eq? m 'deposit) deposit)
+          (else (error "Unknown request MAKE_ACCOUNT" m))
+          )
+    )
+  dispatch)
+#+end_src
+
+#+begin_src racket :noweb yes
+<<account_example>>
+(define acc (make-account 100))
+((acc 'withdraw) 20)
+((acc 'deposit) 40)
+#+end_src
+
+#+RESULTS:
+: 80
+: 120
+
+*** Exercise 3.1
+#+begin_src racket
+(define (make-accumulator initial)
+  (define (dispatch add)
+    (set! initial (+ initial add))
+    initial)
+  dispatch)
+(define A (make-accumulator 10))
+(A 10)
+(A 5)
+#+end_src
+
+#+RESULTS:
+: 20
+: 25
+
+*** Exercise 3.2
+#+begin_src racket
+(define (make-monitored f)
+  (let ((num_calls 0))
+    (define (dispatch m)
+      (if (eq? m 'how-many-calls?)
+          num_calls
+          (begin
+            (set! num_calls (+ num_calls 1))
+            (f m))))
+    dispatch))
+
+(define s (make-monitored sqrt))
+(s 5)
+(s 'how-many-calls?)
+#+end_src
+
+#+RESULTS:
+: 2.23606797749979
+: 1
+
+*** Exercise 3.3
+#+begin_src racket
+(define (make-account balance actual-password)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance
+                     (- balance amount))
+               balance)
+        (error "Not sufficient funds: " balance)))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (define (dispatch password m)
+    (if (eq? password actual-password)
+        (cond ((eq? m 'withdraw) withdraw)
+              ((eq? m 'deposit) deposit)
+              (else (error "Unknown request MAKE_ACCOUNT" m))
+              )
+        (lambda (x)  "Incorrect Password"))
+    )
+  dispatch)
+
+(define acc
+  (make-account 100 'secret-password))
+((acc 'secret-password 'withdraw) 40)
+((acc 'some-other-password 'deposit) 50)
+#+end_src
+
+#+RESULTS:
+: 60
+: "Incorrect Password"
+
+*** Exercise 3.4
+#+begin_src racket
+(define (call-the-cops)
+  'calling-the-cops)
+
+(define (make-account balance actual-password)
+  (let ((num-incorrect-calls 0))
+    (define (withdraw amount)
+      (if (>= balance amount)
+          (begin (set! balance
+                       (- balance amount))
+                 balance)
+          (error "Not sufficient funds: " balance)))
+    (define (deposit amount)
+      (set! balance (+ balance amount))
+      balance)
+    (define (dispatch password m)
+      (if (eq? password actual-password)
+          (begin
+            (set! num-incorrect-calls 0)
+            (cond ((eq? m 'withdraw) withdraw)
+                  ((eq? m 'deposit) deposit)
+                  (else (error "Unknown request MAKE_ACCOUNT" m))
+                  ))
+          (begin
+            (set! num-incorrect-calls (+ num-incorrect-calls 1))
+            (if (> num-incorrect-calls 7)
+                (begin
+                  (call-the-cops)
+                  (lambda (x) "Incorrect Password")
+                  )
+                (lambda (x)  "Incorrect Password"))))
+      )
+    dispatch))
+
+(define acc
+  (make-account 100 'secret-password))
+
+((acc 'some-other-password 'deposit) 50)
+((acc 'secret-password 'withdraw) 40)
+#+end_src
+
+#+RESULTS:
+: Incorrect Password
